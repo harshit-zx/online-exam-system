@@ -1,0 +1,350 @@
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import API from "../services/api";
+import toast from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
+import { 
+  Plus, Trash2, List, BarChart2, Edit3, Clock, LayoutDashboard, 
+  LogOut, Loader2, Globe, Lock, ShieldAlert, ChevronDown, 
+  ChevronUp, CheckCircle2, XCircle, Repeat, ShieldCheck, AlertTriangle, Eye
+} from "lucide-react";
+
+const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  
+  const [exams, setExams] = useState([]);
+  const [results, setResults] = useState([]);
+  const [activeTab, setActiveTab] = useState("exams");
+  const [loading, setLoading] = useState(false);
+  const [expandedExamId, setExpandedExamId] = useState(null);
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      if (activeTab === "exams") {
+        const res = await API.get("/exams");
+        setExams(res.data.exams || res.data);
+      } else {
+        const res = await API.get("/results/all");
+        setResults(res.data);
+      }
+    } catch (err) {
+      toast.error(`Failed to fetch ${activeTab}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTogglePublish = async (exam) => {
+    try {
+      const updatedStatus = !exam.isPublished;
+      await API.put(`/exams/${exam._id}`, { ...exam, isPublished: updatedStatus });
+      setExams(exams.map(e => e._id === exam._id ? { ...e, isPublished: updatedStatus } : e));
+      toast.success(updatedStatus ? "Exam is now Live!" : "Exam moved to Drafts");
+    } catch (err) {
+      toast.error("Failed to update publish status.");
+    }
+  };
+
+  const handleDeleteExam = async (id) => {
+    if (window.confirm("Are you sure? This will permanently delete the exam and all associated student results.")) {
+      try {
+        await API.delete(`/exams/${id}`);
+        setExams(exams.filter((exam) => exam._id !== id));
+        toast.success("Exam deleted successfully");
+      } catch (err) {
+        toast.error("Failed to delete exam");
+      }
+    }
+  };
+
+  // ✅ KEEPING THE NEW FEATURE: Delete Result & Reset Attempts
+  const handleDeleteResult = async (id) => {
+    if (window.confirm("Delete this result? This will clear the attempt and allow the student to retake the exam if they hit their limit.")) {
+      try {
+        await API.delete(`/results/${id}`);
+        setResults(results.filter((res) => res._id !== id));
+        toast.success("Result deleted. Attempt reset for student.");
+      } catch (err) {
+        toast.error("Failed to delete result");
+      }
+    }
+  };
+
+  const toggleSecurityPanel = (id) => {
+    setExpandedExamId(expandedExamId === id ? null : id);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] flex">
+      
+      {/* SIDEBAR */}
+      <aside className="w-64 bg-slate-900 hidden lg:flex flex-col text-white p-6 sticky top-0 h-screen">
+        <div className="flex items-center gap-3 mb-10 px-2">
+          <div className="bg-indigo-500 p-2 rounded-xl">
+            <LayoutDashboard size={24} />
+          </div>
+          <span className="font-bold text-xl tracking-tight">AdminPro</span>
+        </div>
+
+        <nav className="space-y-2 flex-1">
+          <button 
+            onClick={() => setActiveTab("exams")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'exams' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-white/5'}`}
+          >
+            <List size={20} /> Manage Exams
+          </button>
+          <button 
+            onClick={() => setActiveTab("results")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'results' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-white/5'}`}
+          >
+            <BarChart2 size={20} /> Global Results
+          </button>
+        </nav>
+
+        <button 
+          onClick={logout}
+          className="flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl font-medium transition-all mt-auto"
+        >
+          <LogOut size={20} /> Logout
+        </button>
+      </aside>
+
+      {/* MAIN CONTENT */}
+      <main className="flex-1 p-4 md:p-8 lg:p-10 w-full overflow-hidden">
+        
+        {/* HEADER */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-slate-900">Admin Control Panel</h1>
+            <p className="text-slate-500 mt-1">Manage examinations and monitor student performance.</p>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex bg-white p-2 rounded-2xl shadow-sm border border-slate-100 items-center gap-3 px-4 mr-2">
+              <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold">
+                {user?.name?.charAt(0) || 'A'}
+              </div>
+              <div className="text-sm">
+                <p className="font-bold text-slate-800 leading-none">{user?.name}</p>
+                <p className="text-slate-400 text-xs">Administrator</p>
+              </div>
+            </div>
+
+            <Link
+              to="/admin/create-exam"
+              className="bg-slate-900 text-white px-6 py-3.5 rounded-xl font-bold hover:bg-slate-800 flex items-center shadow-xl shadow-slate-900/20 transition-all active:scale-95 whitespace-nowrap"
+            >
+              <Plus size={20} className="mr-2" />
+              Create Exam
+            </Link>
+          </div>
+        </header>
+
+        {/* MOBILE TABS */}
+        <div className="flex lg:hidden bg-white rounded-2xl shadow-sm border border-slate-100 mb-6 overflow-hidden p-1">
+           <button
+             onClick={() => setActiveTab("exams")}
+             className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${activeTab === "exams" ? "bg-indigo-50 text-indigo-600" : "text-slate-500"}`}
+           >
+             Exams
+           </button>
+           <button
+             onClick={() => setActiveTab("results")}
+             className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${activeTab === "results" ? "bg-indigo-50 text-indigo-600" : "text-slate-500"}`}
+           >
+             Results
+           </button>
+        </div>
+
+        {/* CONTENT AREA */}
+        {loading ? (
+           <div className="flex flex-col items-center justify-center py-32 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm">
+             <Loader2 className="animate-spin text-indigo-500 mb-4" size={48} />
+             <p className="text-slate-500 font-bold tracking-wide">Loading data...</p>
+           </div>
+        ) : activeTab === "exams" ? (
+          
+          /* --- EXAMS GRID --- */
+          exams.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {exams.map((exam) => (
+                <div key={exam._id} className="group bg-white border border-slate-100 p-6 rounded-4xl hover:shadow-xl hover:shadow-indigo-500/5 transition-all flex flex-col h-full">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${exam.isPublished ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+                      {exam.isPublished ? <><Globe size={12}/> Published</> : <><Lock size={12}/> Draft</>}
+                    </span>
+                    <div className="flex gap-1 bg-slate-50 rounded-xl p-1 border border-slate-100">
+                      <button onClick={() => navigate(`/admin/edit-exam/${exam._id}`)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-lg transition-all" title="Edit Exam">
+                        <Edit3 size={16} />
+                      </button>
+                      <button onClick={() => handleDeleteExam(exam._id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-white rounded-lg transition-all" title="Delete Exam">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-slate-800 mb-2 line-clamp-1">{exam.title}</h3>
+                  <p className="text-slate-500 text-sm line-clamp-2 mb-6 flex-1">{exam.description}</p>
+                  
+                  <div className="flex items-center gap-4 text-slate-500 text-sm font-medium mb-5">
+                    <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg"><Clock size={16} className="text-indigo-400"/> {exam.duration}m</div>
+                    <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg"><List size={16} className="text-indigo-400"/> {exam.questions?.length || 0} Qs</div>
+                  </div>
+
+                  {/* Anti-Cheating Dropdown */}
+                  <div className="border border-slate-100 rounded-xl overflow-hidden mb-5">
+                    <button 
+                      onClick={() => toggleSecurityPanel(exam._id)}
+                      className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 transition-colors text-sm font-bold text-slate-700"
+                    >
+                      <span className="flex items-center gap-2"><ShieldAlert size={16} className="text-indigo-500" /> Security Settings</span>
+                      {expandedExamId === exam._id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    
+                    {expandedExamId === exam._id && (
+                      <div className="p-3 bg-white border-t border-slate-100 space-y-2 text-xs font-medium">
+                        <div className="flex justify-between items-center p-2 rounded-lg bg-slate-50">
+                           <span className="text-slate-600">Tab Switching</span>
+                           {exam.preventTabSwitch ? <span className="flex items-center gap-1 text-emerald-600"><CheckCircle2 size={14}/> Blocked</span> : <span className="flex items-center gap-1 text-red-500"><XCircle size={14}/> Allowed</span>}
+                        </div>
+                        <div className="flex justify-between items-center p-2 rounded-lg bg-slate-50">
+                           <span className="text-slate-600">Copy / Paste</span>
+                           {exam.disableCopyPaste ? <span className="flex items-center gap-1 text-emerald-600"><CheckCircle2 size={14}/> Blocked</span> : <span className="flex items-center gap-1 text-red-500"><XCircle size={14}/> Allowed</span>}
+                        </div>
+                        <div className="flex justify-between items-center p-2 rounded-lg bg-slate-50">
+                           <span className="text-slate-600 flex items-center gap-1"><Repeat size={14}/> Attempts Allowed</span>
+                           <span className="font-bold text-slate-800">{exam.allowedAttempts || 1}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <button 
+                    onClick={() => handleTogglePublish(exam)}
+                    className={`w-full py-3 rounded-xl font-bold text-sm transition-all border ${exam.isPublished ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50' : 'bg-indigo-50 border-indigo-100 text-indigo-600 hover:bg-indigo-100'}`}
+                  >
+                    {exam.isPublished ? 'Unpublish Exam' : 'Publish to Students'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-[2.5rem] p-20 text-center border border-dashed border-slate-200">
+              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300"><List size={40} /></div>
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">No Exams Found</h3>
+              <p className="text-slate-400 max-w-sm mx-auto mb-8">You haven't created any examinations yet.</p>
+            </div>
+          )
+        ) : (
+          
+          /* --- RESULTS TABLE --- */
+          results.length > 0 ? (
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-100">
+                  <thead className="bg-slate-50/50">
+                    <tr>
+                      <th className="px-6 py-5 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Student</th>
+                      <th className="px-6 py-5 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Assessment</th>
+                      <th className="px-6 py-5 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Score</th>
+                      <th className="px-6 py-5 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Security / Integrity</th>
+                      <th className="px-6 py-5 text-left text-xs font-black text-slate-400 uppercase tracking-widest">Date Taken</th>
+                      <th className="px-6 py-5 text-center text-xs font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50 bg-white">
+                    {results.map((result) => {
+                      const percentage = result.totalMarks > 0 ? ((result.score / result.totalMarks) * 100) : 0;
+                      const isPassing = percentage >= 40;
+                      const hasWarnings = result.warnings > 0;
+
+                      return (
+                        <tr key={result._id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                                {result.user?.name?.charAt(0) || 'U'}
+                              </div>
+                              <div>
+                                <div className="font-bold text-slate-800">{result.user?.name || "Unknown User"}</div>
+                                <div className="text-xs text-slate-400">{result.user?.email || "No email"}</div>
+                              </div>
+                            </div>
+                          </td>
+                          
+                          <td className="px-6 py-4">
+                            <div className="text-sm font-bold text-slate-700">{result.exam?.title || "Deleted Exam"}</div>
+                          </td>
+                          
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                              <span className={`text-sm font-black px-3 py-1 rounded-lg ${isPassing ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                                {result.score} / {result.totalMarks}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* ✅ INTEGRITY STATUS BADGE */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {hasWarnings ? (
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 w-max">
+                                <AlertTriangle size={14} /> Flagged ({result.warnings} warnings)
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 w-max">
+                                <ShieldCheck size={14} /> Clean Session
+                              </div>
+                            )}
+                          </td>
+
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-500">
+                            {new Date(result.createdAt).toLocaleDateString()}
+                          </td>
+
+                          {/* ✅ DELETE & VIEW ACTIONS */}
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="flex justify-center gap-2">
+                              <button 
+                                onClick={() => navigate(`/admin/view-result/${result._id}`)}
+                                className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                title="View Details"
+                              >
+                                <Eye size={18} />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteResult(result._id)}
+                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                title="Delete Result (Resets Attempt)"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-[2.5rem] p-20 text-center border border-dashed border-slate-200">
+              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300"><BarChart2 size={40} /></div>
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">No Results Yet</h3>
+              <p className="text-slate-400 max-w-sm mx-auto">Once students start taking your exams, their performance will appear here automatically.</p>
+            </div>
+          )
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default AdminDashboard;  
