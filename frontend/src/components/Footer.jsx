@@ -11,14 +11,12 @@ const Footer = () => {
     navigate("/login");
   };
 
-  // Determine the correct dashboard path based on the user's role
-  const dashboardPath = user?.role === "admin" ? "/admin/dashboard" : "/student/dashboard";
+  const dashboardPath = "/"; // Land on home
 
   return (
     <footer className="bg-slate-950 pt-16 pb-8 border-t border-slate-900 text-slate-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
-          
           {/* Logo Section */}
           <div className="flex items-center gap-2">
             <div className="bg-indigo-600 p-1.5 rounded-lg">
@@ -33,11 +31,14 @@ const Footer = () => {
           <div className="flex flex-wrap justify-center items-center gap-6 font-medium text-sm">
             {user ? (
               <>
-                <Link to={dashboardPath} className="hover:text-white transition-colors">
+                <Link
+                  to={dashboardPath}
+                  className="hover:text-white transition-colors"
+                >
                   Dashboard
                 </Link>
-                <button 
-                  onClick={handleLogout} 
+                <button
+                  onClick={handleLogout}
                   className="hover:text-red-400 transition-colors"
                 >
                   Logout
@@ -45,15 +46,21 @@ const Footer = () => {
               </>
             ) : (
               <>
-                <Link to="/login" className="hover:text-white transition-colors">
+                <Link
+                  to="/login"
+                  className="hover:text-white transition-colors"
+                >
                   Login
                 </Link>
-                <Link to="/signup" className="hover:text-white transition-colors">
+                <Link
+                  to="/signup"
+                  className="hover:text-white transition-colors"
+                >
                   Sign Up
                 </Link>
               </>
             )}
-            
+
             {/* Standard Links */}
             <Link to="#" className="hover:text-white transition-colors">
               Privacy Policy
@@ -62,7 +69,6 @@ const Footer = () => {
               Terms of Service
             </Link>
           </div>
-
         </div>
 
         {/* Bottom Copyright Section */}

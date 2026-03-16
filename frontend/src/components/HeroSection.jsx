@@ -11,8 +11,7 @@ const HeroSection = () => {
   const y1 = useTransform(scrollY, [0, 500], [0, 200]);
   const y2 = useTransform(scrollY, [0, 500], [0, -150]);
 
-  const dashboardPath =
-    user?.role === "admin" ? "/admin/dashboard" : "/student/dashboard";
+  const dashboardPath = "/"; // Land on home first
 
   // Animation Variants
   const containerVariants = {

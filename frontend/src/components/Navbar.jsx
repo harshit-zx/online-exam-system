@@ -71,11 +71,8 @@ function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             {user ? (
               <>
-                <NavLink
-                  to={isAdmin ? "/admin/dashboard" : "/student/dashboard"}
-                  icon={LayoutDashboard}
-                >
-                  Dashboard
+                <NavLink to="/" icon={LayoutDashboard}>
+                  Home
                 </NavLink>
 
                 {isAdmin ? (
@@ -172,11 +169,8 @@ function Navbar() {
               </div>
 
               <div className="space-y-1">
-                <NavLink
-                  to={isAdmin ? "/admin/dashboard" : "/student/dashboard"}
-                  icon={LayoutDashboard}
-                >
-                  Dashboard
+                <NavLink to="/" icon={LayoutDashboard}>
+                  Home
                 </NavLink>
                 {isAdmin ? (
                   <NavLink to="/admin/createexam" icon={PlusCircle}>
