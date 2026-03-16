@@ -1,19 +1,34 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, ShieldCheck, Zap, Globe } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const HeroSection = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { scrollY } = useScroll();
+  const navigate = useNavigate();
 
-  // Parallax effect for background elements
+  // Parallax effects for the background
   const y1 = useTransform(scrollY, [0, 500], [0, 200]);
   const y2 = useTransform(scrollY, [0, 500], [0, -150]);
 
-  const dashboardPath = "/"; // Land on home first
+  /**
+   * --- Manual Redirect Function ---
+   * Triggered only on click. Checks role and directs accordingly.
+   */
+  const handleDashboardRedirect = () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
 
-  // Animation Variants
+    if (user.role === "admin") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/student/dashboard");
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -33,12 +48,9 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 pb-24 px-4 overflow-hidden bg-slate-50">
-      {/* --- Dynamic Background Effects --- */}
+      {/* --- Aesthetic Background --- */}
       <div className="absolute inset-0 z-0">
-        {/* Animated Grid */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[40px_40px] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
-
-        {/* Floating Orbs */}
         <motion.div
           style={{ y: y1 }}
           className="absolute top-20 left-[10%] w-72 h-72 bg-indigo-400/20 rounded-full blur-[120px]"
@@ -67,7 +79,7 @@ const HeroSection = () => {
           ExamPro 2.0: The Gold Standard in Assessment
         </motion.div>
 
-        {/* --- Animated Headline --- */}
+        {/* --- Headline --- */}
         <motion.h1
           variants={itemVariants}
           className="text-6xl md:text-8xl lg:text-9xl font-black text-slate-900 tracking-tight mb-8 leading-[0.9]"
@@ -86,32 +98,29 @@ const HeroSection = () => {
           </span>
         </motion.h1>
 
-        {/* --- Description --- */}
         <motion.p
           variants={itemVariants}
           className="text-lg md:text-2xl text-slate-600 max-w-3xl mx-auto mb-12 font-medium leading-relaxed px-4"
         >
-          Secure examinations powered by AI. Experience
+          Secure examinations powered by AI. Experience{" "}
+          <span className="text-slate-900 font-bold">real-time proctoring</span>{" "}
+          and{" "}
           <span className="text-slate-900 font-bold">
-            {" "}
-            real-time proctoring
-          </span>{" "}
-          and
-          <span className="text-slate-900 font-bold">
-            {" "}
             instant global insights
-          </span>{" "}
-          in one unified platform.
+          </span>
+          .
         </motion.p>
 
-        {/* --- Action Buttons --- */}
+        {/* --- Buttons --- */}
         <motion.div
           variants={itemVariants}
           className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-16"
         >
-          {user ? (
-            <Link
-              to={dashboardPath}
+          {loading ? (
+            <div className="h-16 w-48 bg-slate-200 animate-pulse rounded-2xl" />
+          ) : user ? (
+            <button
+              onClick={handleDashboardRedirect}
               className="group relative px-10 py-5 bg-slate-900 text-white font-bold rounded-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-slate-900/20"
             >
               <div className="absolute inset-0 bg-linear-to-r from-indigo-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -119,14 +128,14 @@ const HeroSection = () => {
                 Enter Dashboard{" "}
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" />
               </span>
-            </Link>
+            </button>
           ) : (
             <>
               <Link
                 to="/signup"
                 className="w-full sm:w-auto px-10 py-5 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-600/25 active:scale-95 text-lg flex items-center justify-center gap-2 group"
               >
-                Get Started Free
+                Get Started Free{" "}
                 <ArrowRight className="group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
@@ -139,7 +148,7 @@ const HeroSection = () => {
           )}
         </motion.div>
 
-        {/* --- Trust Markers --- */}
+        {/* --- Stats/Trust Section --- */}
         <motion.div
           variants={itemVariants}
           className="grid grid-cols-2 md:grid-cols-3 gap-8 pt-8 border-t border-slate-200 max-w-4xl mx-auto"
