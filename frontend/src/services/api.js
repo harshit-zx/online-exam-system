@@ -19,15 +19,11 @@ API.interceptors.request.use(
   },
 );
 
-// Response interceptor - handle 401/refresh/logout
+// Response interceptor - log errors but no auto-logout/redirect (prevents loop)
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
-    }
+    console.error("API Error:", error.response?.status, error.response?.data);
     return Promise.reject(error);
   },
 );
