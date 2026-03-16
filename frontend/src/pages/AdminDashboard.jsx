@@ -25,7 +25,10 @@ const AdminDashboard = () => {
   }, [activeTab]);
 
   const fetchData = async () => {
-    setLoading(true);
+    // ✅ OPTIMISTIC UI FIX: Only show the full-screen spinner if the array is completely empty
+    if (activeTab === "exams" && exams.length === 0) setLoading(true);
+    if (activeTab === "results" && results.length === 0) setLoading(true);
+
     try {
       if (activeTab === "exams") {
         const res = await API.get("/exams");
@@ -136,7 +139,6 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            {/* ✅ FIXED ROUTE: /admin/createexam */}
             <Link
               to="/admin/createexam"
               className="w-full md:w-auto bg-slate-900 text-white px-6 py-3.5 rounded-xl font-bold hover:bg-indigo-600 flex items-center justify-center shadow-xl shadow-slate-900/20 hover:shadow-indigo-600/30 transition-all duration-300 active:scale-95 whitespace-nowrap group"
@@ -312,7 +314,6 @@ const AdminDashboard = () => {
 
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div className="flex justify-center gap-2">
-                              {/* ✅ FIXED ROUTE: Now points to the actual Result.jsx component */}
                               <button 
                                 onClick={() => navigate(`/results/${result._id}`)}
                                 className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:shadow-sm rounded-xl transition-all"
