@@ -67,8 +67,8 @@ const Home = () => {
   };
 
   // Dynamic dashboard redirect based on user role
-  const dashboardPath =
-    user?.role === "admin" ? "/admin/dashboard" : "/student/dashboard";
+  // const dashboardPath =
+  //   user?.role === "admin" ? "/admin/dashboard" : "/student/dashboard";
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-100 selection:text-indigo-900">
