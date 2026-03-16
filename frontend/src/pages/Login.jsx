@@ -36,13 +36,8 @@ function Login() {
 
       toast.success(`Welcome back, ${res.data.user.name}!`);
 
-      // ROLE-BASED REDIRECT
       setTimeout(() => {
-        if (res.data.user.role === "admin") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/student/dashboard");
-        }
+        navigate("/");
       }, 1200);
     } catch (err) {
       toast.error(err.response?.data?.message || "Invalid email or password");
@@ -53,8 +48,6 @@ function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] p-6 font-sans">
-      
-
       <div className="bg-white shadow-[0_20px_50px_rgba(8,112,184,0.1)]rounded-[2.5rem] grid md:grid-cols-2 w-full max-w-6xl overflow-hidden border border-slate-100">
         {/* LEFT SIDE: DESIGN & BRANDING (Reversed from Signup for Visual Variety) */}
         <div className="hidden md:flex bg-linear-to-br from-indigo-600 via-blue-600 to-indigo-800 text-white items-center justify-center p-16 relative">
