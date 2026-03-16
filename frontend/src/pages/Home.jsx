@@ -18,7 +18,6 @@ import CTABottomSection from "../components/CTABottomSection";
 
 const Home = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const [exams, setExams] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
@@ -57,18 +56,7 @@ const Home = () => {
     fetchData();
   }, []);
 
-  /* ---------------- EXAM CLICK ---------------- */
-  const handleExamClick = (exam) => {
-    if (user) {
-      navigate(`/exam/attempt/${exam._id}`);
-    } else {
-      navigate("/login");
-    }
-  };
-
-  // Dynamic dashboard redirect based on user role
-  // const dashboardPath =
-  //   user?.role === "admin" ? "/admin/dashboard" : "/student/dashboard";
+  /* ---------------- NO AUTO REDIRECT ---------------- */
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-100 selection:text-indigo-900">
@@ -81,11 +69,11 @@ const Home = () => {
       <FeaturedExamsSection
         exams={exams}
         loading={loading}
-        onExamClick={handleExamClick}
+        onExamClick={() => {}}
         user={user}
       />
 
-      <section className="py Asc bg-white border-y border-slate-100">
+      <section className="py-24 bg-white border-y border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-16 items-start">
           <CategoriesSection />
           <LeaderboardSection leaderboard={leaderboard} loading={loading} />
