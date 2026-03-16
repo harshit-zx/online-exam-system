@@ -47,7 +47,7 @@ const FeaturedExamsSection = ({ exams, loading, handleExamClick, user }) => {
               >
                 <ExamCard
                   exam={exam}
-                  onClick={() => handleExamClick(exam)} // ALIGNED PROP NAME
+                  onClick={() => {}}
                   buttonText={buttonText}
                 />
               </div>
