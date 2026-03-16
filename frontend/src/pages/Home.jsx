@@ -33,7 +33,7 @@ const Home = () => {
         setExams(
           examRes.data.exams
             ? examRes.data.exams.slice(0, 3)
-            : examRes.data.slice(0, 3)
+            : examRes.data.slice(0, 3),
         );
 
         // Fetch Leaderboard
@@ -66,6 +66,10 @@ const Home = () => {
     }
   };
 
+  // Dynamic dashboard redirect based on user role
+  const dashboardPath =
+    user?.role === "admin" ? "/admin/dashboard" : "/student/dashboard";
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-indigo-100 selection:text-indigo-900">
       <Navbar />
@@ -74,14 +78,14 @@ const Home = () => {
 
       <StatsSection />
 
-      <FeaturedExamsSection 
-        exams={exams} 
-        loading={loading} 
-        onExamClick={handleExamClick} 
-        user={user} 
+      <FeaturedExamsSection
+        exams={exams}
+        loading={loading}
+        onExamClick={handleExamClick}
+        user={user}
       />
 
-      <section className="py-24 bg-white border-y border-slate-100">
+      <section className="py Asc bg-white border-y border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-16 items-start">
           <CategoriesSection />
           <LeaderboardSection leaderboard={leaderboard} loading={loading} />
