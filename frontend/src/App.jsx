@@ -13,6 +13,7 @@ import EditExam from "./pages/admin/EditExam";
 import AttemptExam from "./pages/student/AttemptExam";
 import StudentResults from "./pages/student/StudentResults";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
   return (
@@ -27,24 +28,79 @@ function App() {
         <Route path="/signup" element={<Signup />} />
 
         {/* Admin Section */}
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/createexam" element={<CreateExam />} />
-        <Route path="/admin/edit-exam/:id" element={<EditExam />} />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/createexam"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <CreateExam />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/edit-exam/:id"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <EditExam />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Student Section */}
-        <Route path="/student/dashboard" element={<StudentDashboard />} />
-        <Route path="/exam/attempt/:id" element={<AttemptExam />} />
+        <Route
+          path="/student/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/exam/attempt/:id"
+          element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <AttemptExam />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* ✅ FIXED: Results Section */}
-        {/* Changed :id to :resultId to match your Result.jsx component */}
-        <Route path="/results/:resultId" element={<Result />} />
-        <Route path="/student/allresults" element={<StudentResults />} />
+        {/* Results Section */}
+        <Route
+          path="/results/:resultId"
+          element={
+            <ProtectedRoute allowedRoles={["student", "admin"]}>
+              <Result />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/allresults"
+          element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <StudentResults />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Optional: If they click "View All Results", redirect to dashboard until you build a dedicated list page */}
         <Route path="/results" element={<StudentDashboard />} />
 
         {/* Exam Execution Section */}
-        <Route path="/exam" element={<StartExam />} />
+        <Route
+          path="/exam"
+          element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <StartExam />
+            </ProtectedRoute>
+          }
+        />
 
         {/* 404 Catch-all */}
         <Route path="*" element={<NotFound />} />
