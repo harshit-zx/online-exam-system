@@ -5,6 +5,7 @@ import Timer from '../components/Timer';
 import { Loader2, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 
 const StartExam = () => {
+
   const { examId } = useParams();
   const navigate = useNavigate();
 
@@ -15,95 +16,213 @@ const StartExam = () => {
   const [submitting, setSubmitting] = useState(false);
   const [startTime, setStartTime] = useState(null);
 
+  // ---------------- FETCH EXAM ----------------
   useEffect(() => {
+
     const fetchExam = async () => {
       try {
+
         setLoading(true);
+
         const res = await API.get(`/exams/${examId}`);
+
         setExam(res.data.exam);
         setStartTime(Date.now());
+
+        // ENTER FULLSCREEN
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        }
+
       } catch (error) {
         console.error("Failed to fetch exam", error);
-        // Handle error (e.g., show a message and redirect)
       } finally {
         setLoading(false);
       }
     };
+
     fetchExam();
+
   }, [examId]);
 
+
+  // ---------------- FULLSCREEN EXIT DETECTION ----------------
+  useEffect(() => {
+
+    const handleFullscreenChange = () => {
+
+      if (!document.fullscreenElement) {
+        alert("You exited fullscreen. Exam will be submitted automatically.");
+        handleSubmit();
+      }
+
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+
+  }, []);
+
+
+  // ---------------- DISABLE RIGHT CLICK ----------------
+  useEffect(() => {
+
+    const disableRightClick = (e) => e.preventDefault();
+
+    document.addEventListener("contextmenu", disableRightClick);
+
+    return () => {
+      document.removeEventListener("contextmenu", disableRightClick);
+    };
+
+  }, []);
+
+
+  // ---------------- DISABLE COPY PASTE ----------------
+  useEffect(() => {
+
+    const disableCopyPaste = (e) => e.preventDefault();
+
+    document.addEventListener("copy", disableCopyPaste);
+    document.addEventListener("paste", disableCopyPaste);
+
+    return () => {
+      document.removeEventListener("copy", disableCopyPaste);
+      document.removeEventListener("paste", disableCopyPaste);
+    };
+
+  }, []);
+
+
+  // ---------------- ANSWER SELECT ----------------
   const handleAnswerSelect = (questionId, option) => {
-    setAnswers(prev => ({ ...prev, [questionId]: option }));
+
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: option
+    }));
+
   };
 
+
+  // ---------------- NEXT QUESTION ----------------
   const handleNext = () => {
+
     if (currentQuestionIndex < exam.questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     }
+
   };
 
+
+  // ---------------- PREVIOUS QUESTION ----------------
   const handlePrev = () => {
+
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
     }
+
   };
 
+
+  // ---------------- SUBMIT EXAM ----------------
   const handleSubmit = async () => {
+
     if (submitting) return;
 
     setSubmitting(true);
+
     const endTime = Date.now();
-    const timeTaken = Math.round((endTime - startTime) / 1000); // in seconds
+    const timeTaken = Math.round((endTime - startTime) / 1000);
 
     try {
+
       const payload = {
         examId,
         answers,
-        timeTaken,
+        timeTaken
       };
+
       const res = await API.post('/results/submit', payload);
-      // Redirect to a result page
+
+      // EXIT FULLSCREEN
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+
       navigate(`/result/${res.data.resultId}`);
+
     } catch (error) {
       console.error("Failed to submit exam", error);
-      // Handle submission error
     } finally {
       setSubmitting(false);
     }
+
   };
 
+
+  // ---------------- LOADING SCREEN ----------------
   if (loading) {
+
     return (
       <div className="h-screen w-screen flex items-center justify-center">
         <Loader2 className="animate-spin" size={48} />
       </div>
     );
+
   }
+
 
   if (!exam) {
     return <div>Exam not found or failed to load.</div>;
   }
 
+
   const currentQuestion = exam.questions[currentQuestionIndex];
+
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col items-center p-4">
+
       <div className="w-full max-w-4xl">
-        {/* Header */}
+
+        {/* HEADER */}
         <div className="bg-white p-4 rounded-xl shadow-md flex justify-between items-center mb-4">
+
           <h1 className="text-2xl font-bold">{exam.title}</h1>
-          <Timer duration={exam.duration} onTimeUp={handleSubmit} />
+
+          <Timer
+            duration={exam.duration}
+            onTimeUp={handleSubmit}
+          />
+
         </div>
 
-        {/* Question Area */}
+
+        {/* QUESTION AREA */}
         <div className="bg-white p-6 rounded-xl shadow-md">
+
           <div className="mb-4">
-            <p className="text-sm text-slate-500">Question {currentQuestionIndex + 1} of {exam.questions.length}</p>
-            <h2 className="text-xl font-semibold mt-1">{currentQuestion.questionText}</h2>
+
+            <p className="text-sm text-slate-500">
+              Question {currentQuestionIndex + 1} of {exam.questions.length}
+            </p>
+
+            <h2 className="text-xl font-semibold mt-1">
+              {currentQuestion.questionText}
+            </h2>
+
           </div>
 
+
+          {/* OPTIONS */}
           <div className="space-y-3">
+
             {currentQuestion.options.map((option, index) => (
+
               <label
                 key={index}
                 className={`flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all ${
@@ -112,6 +231,7 @@ const StartExam = () => {
                     : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
+
                 <input
                   type="radio"
                   name={currentQuestion._id}
@@ -120,45 +240,71 @@ const StartExam = () => {
                   onChange={() => handleAnswerSelect(currentQuestion._id, option)}
                   className="hidden"
                 />
+
                 <span className="font-medium">{option}</span>
+
               </label>
+
             ))}
+
           </div>
+
         </div>
 
-        {/* Navigation */}
+
+        {/* NAVIGATION */}
         <div className="flex justify-between items-center mt-4">
+
           <button
             onClick={handlePrev}
             disabled={currentQuestionIndex === 0}
             className="flex items-center gap-2 px-4 py-2 bg-slate-300 text-slate-800 rounded-lg font-semibold disabled:opacity-50"
           >
+
             <ArrowLeft size={18} />
             Previous
+
           </button>
-          
+
+
           {currentQuestionIndex === exam.questions.length - 1 ? (
-             <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 disabled:opacity-70"
-              >
-                {submitting ? <Loader2 className="animate-spin" /> : <CheckCircle size={20} />}
-                Submit Exam
-              </button>
+
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 disabled:opacity-70"
+            >
+
+              {submitting
+                ? <Loader2 className="animate-spin" />
+                : <CheckCircle size={20} />
+              }
+
+              Submit Exam
+
+            </button>
+
           ) : (
+
             <button
               onClick={handleNext}
               className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700"
             >
+
               Next
               <ArrowRight size={18} />
+
             </button>
+
           )}
+
         </div>
+
       </div>
+
     </div>
   );
+
 };
 
 export default StartExam;
